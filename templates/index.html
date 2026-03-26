@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypto Predictor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 12px;
+      padding: 40px;
+      width: 380px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 24px;
+      color: #fff;
+    }
+    select, button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      font-size: 1rem;
+      outline: none;
+    }
+    select {
+      background: #111;
+      color: #ccc;
+      margin-bottom: 16px;
+      cursor: pointer;
+    }
+    button {
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { background: #4338ca; }
+    button:disabled { opacity: .5; cursor: wait; }
+    .result {
+      margin-top: 24px;
+      font-size: 1.6rem;
+      font-weight: 700;
+      min-height: 48px;
+    }
+    .up   { color: #22c55e; }
+    .down { color: #ef4444; }
+    .err  { color: #f59e0b; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>📈 Crypto Trend Predictor</h1>
+
+    <select id="coin">
+      {% for name in coins %}
+      <option value="{{ name }}">{{ name }}</option>
+      {% endfor %}
+    </select>
+
+    <button id="btn" onclick="predict()">Predict</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    async function predict() {
+      const coin = document.getElementById('coin').value;
+      const btn  = document.getElementById('btn');
+      const res  = document.getElementById('result');
+
+      btn.disabled = true;
+      btn.textContent = 'Fetching…';
+      res.className = 'result';
+      res.textContent = '';
+
+      try {
+        const resp = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coin }),
+        });
+        const data = await resp.json();
+
+        if (data.error) {
+          res.className = 'result err';
+          res.textContent = data.error;
+        } else if (data.prediction === 'UP') {
+          res.className = 'result up';
+          res.textContent = '▲ UP';
+        } else {
+          res.className = 'result down';
+          res.textContent = '▼ DOWN';
+        }
+      } catch (e) {
+        res.className = 'result err';
+        res.textContent = 'Network error';
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Predict';
+    }
+  </script>
+</body>
+</html>
